@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-
+use itertools::Itertools;
 use ordered_float::OrderedFloat as OF;
+use std::collections::HashMap;
 
 use crate::{
     ac, ad,
@@ -32,15 +32,7 @@ impl VastFitData {
         calc: &mut Calc,
         fit: &UadFit,
     ) -> bool {
-        validate_fast_fitting(
-            kfs,
-            uad,
-            calc,
-            fit,
-            self.mods_svcs_online.iter(),
-            &ac::attrs::CPU,
-            &ac::attrs::CPU_OUTPUT,
-        )
+        validate_fast_fitting(kfs, uad, calc, fit, &ac::attrs::CPU, &ac::attrs::CPU_OUTPUT)
     }
     pub(in crate::sol::svc::vast) fn validate_powergrid_fast(
         &self,
@@ -49,15 +41,7 @@ impl VastFitData {
         calc: &mut Calc,
         fit: &UadFit,
     ) -> bool {
-        validate_fast_fitting(
-            kfs,
-            uad,
-            calc,
-            fit,
-            self.mods_svcs_online.iter(),
-            &ac::attrs::POWER,
-            &ac::attrs::POWER_OUTPUT,
-        )
+        validate_fast_fitting(kfs, uad, calc, fit, &ac::attrs::POWER, &ac::attrs::POWER_OUTPUT)
     }
     pub(in crate::sol::svc::vast) fn validate_calibration_fast(
         &self,
@@ -131,15 +115,7 @@ impl VastFitData {
         calc: &mut Calc,
         fit: &UadFit,
     ) -> Option<ValResFail> {
-        validate_verbose_fitting(
-            kfs,
-            uad,
-            calc,
-            fit,
-            self.mods_svcs_online.iter(),
-            &ac::attrs::CPU,
-            &ac::attrs::CPU_OUTPUT,
-        )
+        validate_verbose_fitting(kfs, uad, calc, fit, &ac::attrs::CPU, &ac::attrs::CPU_OUTPUT)
     }
     pub(in crate::sol::svc::vast) fn validate_powergrid_verbose(
         &self,
@@ -148,15 +124,7 @@ impl VastFitData {
         calc: &mut Calc,
         fit: &UadFit,
     ) -> Option<ValResFail> {
-        validate_verbose_fitting(
-            kfs,
-            uad,
-            calc,
-            fit,
-            self.mods_svcs_online.iter(),
-            &ac::attrs::POWER,
-            &ac::attrs::POWER_OUTPUT,
-        )
+        validate_verbose_fitting(kfs, uad, calc, fit, &ac::attrs::POWER, &ac::attrs::POWER_OUTPUT)
     }
     pub(in crate::sol::svc::vast) fn validate_calibration_verbose(
         &self,
@@ -229,18 +197,17 @@ fn validate_fast_fitting<'a>(
     uad: &Uad,
     calc: &mut Calc,
     fit: &UadFit,
-    items: impl Iterator<Item = &'a ItemKey>,
     use_a_attr_id: &ad::AAttrId,
     max_a_attr_id: &ad::AAttrId,
 ) -> bool {
     let mut total_use = OF(0.0);
     let mut force_pass = true;
-    for item_key in items {
-        let item_use = match calc.get_item_attr_val_extra(uad, *item_key, use_a_attr_id) {
+    for item_key in iter_fitting_users(uad, fit) {
+        let item_use = match calc.get_item_attr_val_extra(uad, item_key, use_a_attr_id) {
             Some(item_use) => item_use,
             None => continue,
         };
-        if force_pass && item_use > OF(0.0) && !kfs.contains(item_key) {
+        if force_pass && item_use > OF(0.0) && !kfs.contains(&item_key) {
             force_pass = false;
         }
         total_use += item_use;
@@ -279,20 +246,19 @@ fn validate_verbose_fitting<'a>(
     uad: &Uad,
     calc: &mut Calc,
     fit: &UadFit,
-    items: impl ExactSizeIterator<Item = &'a ItemKey>,
     use_a_attr_id: &ad::AAttrId,
     max_a_attr_id: &ad::AAttrId,
 ) -> Option<ValResFail> {
     let mut total_use = OF(0.0);
-    let mut users = HashMap::with_capacity(items.len());
-    for item_key in items {
-        let item_use = match calc.get_item_attr_val_extra(uad, *item_key, use_a_attr_id) {
+    let mut users = HashMap::new();
+    for item_key in iter_fitting_users(uad, fit) {
+        let item_use = match calc.get_item_attr_val_extra(uad, item_key, use_a_attr_id) {
             Some(item_use) => item_use,
             None => continue,
         };
         total_use += item_use;
-        if item_use > OF(0.0) && !kfs.contains(item_key) {
-            users.insert(uad.items.id_by_key(*item_key), item_use);
+        if item_use > OF(0.0) && !kfs.contains(&item_key) {
+            users.insert(uad.items.id_by_key(item_key), item_use);
         }
     }
     if users.is_empty() {
@@ -337,4 +303,14 @@ fn validate_verbose_other<'a>(
         max,
         users,
     })
+}
+
+fn iter_fitting_users(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = ItemKey> {
+    itertools::chain!(
+        fit.mods_high.iter_keys().copied(),
+        fit.mods_mid.iter_keys().copied(),
+        fit.mods_low.iter_keys().copied(),
+        fit.services.iter().copied(),
+    )
+    .filter(|item_key| uad.items.get(*item_key).get_a_state() >= ad::AState::Online)
 }

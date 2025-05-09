@@ -49,7 +49,6 @@ impl Vast {
                 UadItem::Module(module) => {
                     let fit_data = self.get_fit_data_mut(&module.get_fit_key());
                     let extras = module.get_a_extras().unwrap();
-                    fit_data.mods_svcs_online.insert(item_key);
                     if let Some(a_item_grp_id) = extras.val_online_group_id {
                         fit_data
                             .mods_svcs_max_group_online_all
@@ -76,7 +75,6 @@ impl Vast {
                 UadItem::Service(service) => {
                     let fit_data = self.get_fit_data_mut(&service.get_fit_key());
                     let extras = service.get_a_extras().unwrap();
-                    fit_data.mods_svcs_online.insert(item_key);
                     if let Some(a_item_grp_id) = extras.val_online_group_id {
                         fit_data
                             .mods_svcs_max_group_online_all
@@ -202,7 +200,6 @@ impl Vast {
                 UadItem::Module(module) => {
                     let fit_data = self.get_fit_data_mut(&module.get_fit_key());
                     let extras = module.get_a_extras().unwrap();
-                    fit_data.mods_svcs_online.remove(item_key);
                     if let Some(a_item_grp_id) = extras.val_online_group_id {
                         fit_data
                             .mods_svcs_max_group_online_all
@@ -219,7 +216,6 @@ impl Vast {
                 UadItem::Service(service) => {
                     let fit_data = self.get_fit_data_mut(&service.get_fit_key());
                     let extras = service.get_a_extras().unwrap();
-                    fit_data.mods_svcs_online.remove(item_key);
                     if let Some(a_item_grp_id) = extras.val_online_group_id {
                         fit_data
                             .mods_svcs_max_group_online_all

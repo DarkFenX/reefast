@@ -3,7 +3,7 @@ pub use options::{ValOption, ValOptions};
 pub use result::ValResult;
 pub(in crate::sol::svc) use vast::Vast;
 use vast::VastFitData;
-use vaste_stats_fit::{StatRes, StatSlot};
+// use vaste_stats_fit::{StatRes, StatSlot};
 pub use vaste_vals_fit::{
     ValActivationBlockedFail, ValCapitalModFail, ValChargeGroupChargeInfo, ValChargeGroupFail, ValChargeSizeChargeInfo,
     ValChargeSizeFail, ValChargeVolumeChargeInfo, ValChargeVolumeFail, ValDroneGroupFail, ValFighterSquadSizeFail,
