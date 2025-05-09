@@ -16,28 +16,6 @@ impl Vast {
     ) {
         match a_state {
             ad::AState::Online => match item {
-                UadItem::Fighter(fighter) => {
-                    let extras = fighter.get_a_extras().unwrap();
-                    let fit_data = self.get_fit_data_mut(&fighter.get_fit_key());
-                    if extras.is_light_fighter {
-                        fit_data.light_fighters_online.insert(item_key);
-                    }
-                    if extras.is_heavy_fighter {
-                        fit_data.heavy_fighters_online.insert(item_key);
-                    }
-                    if extras.is_support_fighter {
-                        fit_data.support_fighters_online.insert(item_key);
-                    }
-                    if extras.is_standup_light_fighter {
-                        fit_data.standup_light_fighters_online.insert(item_key);
-                    }
-                    if extras.is_standup_heavy_fighter {
-                        fit_data.standup_heavy_fighters_online.insert(item_key);
-                    }
-                    if extras.is_standup_support_fighter {
-                        fit_data.standup_support_fighters_online.insert(item_key);
-                    }
-                }
                 UadItem::Module(module) => {
                     let fit_data = self.get_fit_data_mut(&module.get_fit_key());
                     let extras = module.get_a_extras().unwrap();
@@ -161,28 +139,6 @@ impl Vast {
     ) {
         match a_state {
             ad::AState::Online => match item {
-                UadItem::Fighter(fighter) => {
-                    let extras = fighter.get_a_extras().unwrap();
-                    let fit_data = self.get_fit_data_mut(&fighter.get_fit_key());
-                    if extras.is_light_fighter {
-                        fit_data.light_fighters_online.remove(item_key);
-                    }
-                    if extras.is_heavy_fighter {
-                        fit_data.heavy_fighters_online.remove(item_key);
-                    }
-                    if extras.is_support_fighter {
-                        fit_data.support_fighters_online.remove(item_key);
-                    }
-                    if extras.is_standup_light_fighter {
-                        fit_data.standup_light_fighters_online.remove(item_key);
-                    }
-                    if extras.is_standup_heavy_fighter {
-                        fit_data.standup_heavy_fighters_online.remove(item_key);
-                    }
-                    if extras.is_standup_support_fighter {
-                        fit_data.standup_support_fighters_online.remove(item_key);
-                    }
-                }
                 UadItem::Module(module) => {
                     let fit_data = self.get_fit_data_mut(&module.get_fit_key());
                     let extras = module.get_a_extras().unwrap();

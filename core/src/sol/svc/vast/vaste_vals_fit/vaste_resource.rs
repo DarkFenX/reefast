@@ -54,7 +54,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            iter_rigs_offline_calibration(uad, fit),
+            iter_offline_rigs_with_calibration(uad, fit),
             &ac::attrs::UPGRADE_CAPACITY,
         )
     }
@@ -70,7 +70,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            iter_drones_volume(uad, fit),
+            iter_drones_with_volume(uad, fit),
             &ac::attrs::DRONE_CAPACITY,
         )
     }
@@ -86,7 +86,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            iter_drones_online_bandwidth(uad, fit),
+            iter_online_drones_with_bandwidth(uad, fit),
             &ac::attrs::DRONE_BANDWIDTH,
         )
     }
@@ -102,7 +102,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            iter_fighters_volume(uad, fit),
+            iter_fighters_with_volume(uad, fit),
             &ac::attrs::FTR_CAPACITY,
         )
     }
@@ -137,7 +137,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            iter_rigs_offline_calibration(uad, fit),
+            iter_offline_rigs_with_calibration(uad, fit),
             &ac::attrs::UPGRADE_CAPACITY,
         )
     }
@@ -153,7 +153,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            iter_drones_volume(uad, fit),
+            iter_drones_with_volume(uad, fit),
             &ac::attrs::DRONE_CAPACITY,
         )
     }
@@ -169,7 +169,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            iter_drones_online_bandwidth(uad, fit),
+            iter_online_drones_with_bandwidth(uad, fit),
             &ac::attrs::DRONE_BANDWIDTH,
         )
     }
@@ -185,7 +185,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            iter_fighters_volume(uad, fit),
+            iter_fighters_with_volume(uad, fit),
             &ac::attrs::FTR_CAPACITY,
         )
     }
@@ -314,7 +314,7 @@ fn iter_fitting_users(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = ItemKey> 
     .filter(|item_key| uad.items.get(*item_key).get_a_state() >= ad::AState::Online)
 }
 
-fn iter_rigs_offline_calibration(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
+fn iter_offline_rigs_with_calibration(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
     fit.rigs.iter().copied().filter_map(|item_key| {
         let uad_rig = uad.items.get(item_key).get_rig().unwrap();
         match uad_rig.get_a_state() < ad::AState::Offline {
@@ -326,7 +326,7 @@ fn iter_rigs_offline_calibration(uad: &Uad, fit: &UadFit) -> impl Iterator<Item 
     })
 }
 
-fn iter_drones_volume(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
+fn iter_drones_with_volume(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
     fit.drones.iter().copied().filter_map(|item_key| {
         let uad_drone = uad.items.get(item_key).get_drone().unwrap();
         uad_drone
@@ -336,7 +336,7 @@ fn iter_drones_volume(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey,
     })
 }
 
-fn iter_drones_online_bandwidth(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
+fn iter_online_drones_with_bandwidth(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
     fit.drones.iter().copied().filter_map(|item_key| {
         let uad_drone = uad.items.get(item_key).get_drone().unwrap();
         match uad_drone.get_a_state() < ad::AState::Online {
@@ -349,7 +349,7 @@ fn iter_drones_online_bandwidth(uad: &Uad, fit: &UadFit) -> impl Iterator<Item =
     })
 }
 
-fn iter_fighters_volume(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
+fn iter_fighters_with_volume(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
     fit.fighters.iter().copied().filter_map(|item_key| {
         let uad_fighter = uad.items.get(item_key).get_fighter().unwrap();
         uad_fighter

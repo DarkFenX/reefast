@@ -18,60 +18,25 @@ impl Vast {
 
 impl VastFitData {
     pub(in crate::sol::svc) fn consistency_check(&self, uad: &Uad) -> DebugResult {
-        for &item_key in self.drones_volume.keys() {
-            check_item_key(uad, item_key, true)?;
-        }
         for &item_key in self.drones_bandwidth.keys() {
             check_item_key(uad, item_key, true)?;
         }
-        for &item_key in self.drones_online_bandwidth.keys() {
-            // Holds not loaded drones as well
-            check_item_key(uad, item_key, false)?;
-        }
-        for &item_key in self.fighters_online.iter() {
-            // Holds not loaded fighters as well
-            check_item_key(uad, item_key, false)?;
-        }
         for &item_key in self.support_fighters.iter() {
-            check_item_key(uad, item_key, true)?;
-        }
-        for &item_key in self.support_fighters_online.iter() {
             check_item_key(uad, item_key, true)?;
         }
         for &item_key in self.light_fighters.iter() {
             check_item_key(uad, item_key, true)?;
         }
-        for &item_key in self.light_fighters_online.iter() {
-            check_item_key(uad, item_key, true)?;
-        }
         for &item_key in self.heavy_fighters.iter() {
-            check_item_key(uad, item_key, true)?;
-        }
-        for &item_key in self.heavy_fighters_online.iter() {
             check_item_key(uad, item_key, true)?;
         }
         for &item_key in self.standup_support_fighters.iter() {
             check_item_key(uad, item_key, true)?;
         }
-        for &item_key in self.standup_support_fighters_online.iter() {
-            check_item_key(uad, item_key, true)?;
-        }
         for &item_key in self.standup_light_fighters.iter() {
             check_item_key(uad, item_key, true)?;
         }
-        for &item_key in self.standup_light_fighters_online.iter() {
-            check_item_key(uad, item_key, true)?;
-        }
         for &item_key in self.standup_heavy_fighters.iter() {
-            check_item_key(uad, item_key, true)?;
-        }
-        for &item_key in self.standup_heavy_fighters_online.iter() {
-            check_item_key(uad, item_key, true)?;
-        }
-        for &item_key in self.mods_turret.iter() {
-            check_item_key(uad, item_key, true)?;
-        }
-        for &item_key in self.mods_launcher.iter() {
             check_item_key(uad, item_key, true)?;
         }
         for item_keys in self.slotted_implants.values() {

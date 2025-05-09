@@ -97,9 +97,6 @@ impl Vast {
             UadItem::Drone(drone) => {
                 let extras = drone.get_a_extras().unwrap();
                 item_kind_add(fit_data, item_key, extras.kind, ad::AItemKind::Drone);
-                if let Some(volume) = extras.volume {
-                    fit_data.drones_volume.insert(item_key, volume);
-                }
                 if let Some(bandwidth) = extras.bandwidth_use {
                     fit_data.drones_bandwidth.insert(item_key, bandwidth);
                 };
@@ -152,12 +149,6 @@ impl Vast {
             UadItem::Module(module) => {
                 let extras = module.get_a_extras().unwrap();
                 item_kind_add(fit_data, item_key, extras.kind, get_module_expected_kind(module));
-                if extras.takes_turret_hardpoint {
-                    fit_data.mods_turret.insert(item_key);
-                }
-                if extras.takes_launcher_hardpoint {
-                    fit_data.mods_launcher.insert(item_key);
-                }
                 if let Some(ship_limit) = &extras.ship_limit {
                     fit_data.ship_limited_items.insert(item_key, ship_limit.clone());
                 }
@@ -414,7 +405,6 @@ impl Vast {
             UadItem::Drone(drone) => {
                 let extras = drone.get_a_extras().unwrap();
                 item_kind_remove(fit_data, item_key, extras.kind, ad::AItemKind::Drone);
-                fit_data.drones_volume.remove(item_key);
                 if extras.bandwidth_use.is_some() {
                     fit_data.drones_bandwidth.remove(item_key);
                 }
@@ -458,12 +448,6 @@ impl Vast {
             UadItem::Module(module) => {
                 let extras = module.get_a_extras().unwrap();
                 item_kind_remove(fit_data, item_key, extras.kind, get_module_expected_kind(module));
-                if extras.takes_turret_hardpoint {
-                    fit_data.mods_turret.remove(item_key);
-                }
-                if extras.takes_launcher_hardpoint {
-                    fit_data.mods_launcher.remove(item_key);
-                }
                 if extras.ship_limit.is_some() {
                     fit_data.ship_limited_items.remove(item_key);
                 }
