@@ -6,7 +6,7 @@ use ordered_float::OrderedFloat as OF;
 use crate::{
     ac, ad,
     sol::{
-        AttrVal, FitKey, ItemKey, ModRack,
+        FitKey, ItemKey, ModRack,
         svc::vast::{
             ValCache, ValFighterSquadSizeFighterInfo, ValItemKindItemInfo, ValShipKind, ValSrqSkillInfo, Vast,
             VastFitData,
@@ -114,11 +114,6 @@ impl Vast {
                 let extras = fighter.get_a_extras().unwrap();
                 item_kind_add(fit_data, item_key, extras.kind, ad::AItemKind::Fighter);
                 let count = fighter.get_count().unwrap();
-                if let Some(volume) = extras.volume {
-                    fit_data
-                        .fighters_volume
-                        .insert(item_key, volume * AttrVal::from(count.current));
-                }
                 if count.current > count.max {
                     fit_data.fighter_squad_size.insert(
                         item_key,
@@ -430,7 +425,6 @@ impl Vast {
             UadItem::Fighter(fighter) => {
                 let extras = fighter.get_a_extras().unwrap();
                 item_kind_remove(fit_data, item_key, extras.kind, ad::AItemKind::Fighter);
-                fit_data.fighters_volume.remove(item_key);
                 let count = fighter.get_count().unwrap();
                 if count.current > count.max {
                     fit_data.fighter_squad_size.remove(item_key);

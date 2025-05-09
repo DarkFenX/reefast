@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use ordered_float::OrderedFloat as OF;
 use std::collections::HashMap;
 
@@ -55,7 +54,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            self.rigs_offline_calibration.iter(),
+            iter_rigs_offline_calibration(uad, fit),
             &ac::attrs::UPGRADE_CAPACITY,
         )
     }
@@ -71,7 +70,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            self.drones_volume.iter(),
+            iter_drones_volume(uad, fit),
             &ac::attrs::DRONE_CAPACITY,
         )
     }
@@ -87,7 +86,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            self.drones_online_bandwidth.iter(),
+            iter_drones_online_bandwidth(uad, fit),
             &ac::attrs::DRONE_BANDWIDTH,
         )
     }
@@ -103,7 +102,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            self.fighters_volume.iter(),
+            iter_fighters_volume(uad, fit),
             &ac::attrs::FTR_CAPACITY,
         )
     }
@@ -138,7 +137,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            self.rigs_offline_calibration.iter(),
+            iter_rigs_offline_calibration(uad, fit),
             &ac::attrs::UPGRADE_CAPACITY,
         )
     }
@@ -154,7 +153,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            self.drones_volume.iter(),
+            iter_drones_volume(uad, fit),
             &ac::attrs::DRONE_CAPACITY,
         )
     }
@@ -170,7 +169,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            self.drones_online_bandwidth.iter(),
+            iter_drones_online_bandwidth(uad, fit),
             &ac::attrs::DRONE_BANDWIDTH,
         )
     }
@@ -186,7 +185,7 @@ impl VastFitData {
             uad,
             calc,
             fit,
-            self.fighters_volume.iter(),
+            iter_fighters_volume(uad, fit),
             &ac::attrs::FTR_CAPACITY,
         )
     }
@@ -223,13 +222,13 @@ fn validate_fast_other<'a>(
     uad: &Uad,
     calc: &mut Calc,
     fit: &UadFit,
-    items: impl Iterator<Item = (&'a ItemKey, &'a ad::AAttrVal)>,
+    items: impl Iterator<Item = (ItemKey, ad::AAttrVal)>,
     max_a_attr_id: &ad::AAttrId,
 ) -> bool {
     let mut total_use = OF(0.0);
     let mut force_pass = true;
-    for (item_key, &item_use) in items {
-        if force_pass && item_use > OF(0.0) && !kfs.contains(item_key) {
+    for (item_key, item_use) in items {
+        if force_pass && item_use > OF(0.0) && !kfs.contains(&item_key) {
             force_pass = false;
         }
         total_use += item_use;
@@ -280,15 +279,15 @@ fn validate_verbose_other<'a>(
     uad: &Uad,
     calc: &mut Calc,
     fit: &UadFit,
-    items: impl ExactSizeIterator<Item = (&'a ItemKey, &'a ad::AAttrVal)>,
+    items: impl Iterator<Item = (ItemKey, ad::AAttrVal)>,
     max_a_attr_id: &ad::AAttrId,
 ) -> Option<ValResFail> {
     let mut total_use = OF(0.0);
-    let mut users = HashMap::with_capacity(items.len());
-    for (item_key, &item_use) in items {
+    let mut users = HashMap::new();
+    for (item_key, item_use) in items {
         total_use += item_use;
-        if item_use > OF(0.0) && !kfs.contains(item_key) {
-            users.insert(uad.items.id_by_key(*item_key), item_use);
+        if item_use > OF(0.0) && !kfs.contains(&item_key) {
+            users.insert(uad.items.id_by_key(item_key), item_use);
         }
     }
     if users.is_empty() {
@@ -313,4 +312,54 @@ fn iter_fitting_users(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = ItemKey> 
         fit.services.iter().copied(),
     )
     .filter(|item_key| uad.items.get(*item_key).get_a_state() >= ad::AState::Online)
+}
+
+fn iter_rigs_offline_calibration(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
+    fit.rigs.iter().copied().filter_map(|item_key| {
+        let uad_rig = uad.items.get(item_key).get_rig().unwrap();
+        match uad_rig.get_a_state() < ad::AState::Offline {
+            true => None,
+            false => uad_rig
+                .get_a_attrs()
+                .and_then(|a_attrs| a_attrs.get(&ac::attrs::UPGRADE_COST).map(|val| (item_key, *val))),
+        }
+    })
+}
+
+fn iter_drones_volume(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
+    fit.drones.iter().copied().filter_map(|item_key| {
+        let uad_drone = uad.items.get(item_key).get_drone().unwrap();
+        uad_drone
+            .get_a_extras()
+            .and_then(|a_extras| a_extras.volume)
+            .map(|volume| (item_key, volume))
+    })
+}
+
+fn iter_drones_online_bandwidth(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
+    fit.drones.iter().copied().filter_map(|item_key| {
+        let uad_drone = uad.items.get(item_key).get_drone().unwrap();
+        match uad_drone.get_a_state() < ad::AState::Online {
+            true => None,
+            false => uad_drone
+                .get_a_extras()
+                .and_then(|a_extras| a_extras.bandwidth_use)
+                .map(|bandwidth| (item_key, bandwidth)),
+        }
+    })
+}
+
+fn iter_fighters_volume(uad: &Uad, fit: &UadFit) -> impl Iterator<Item = (ItemKey, AttrVal)> {
+    fit.fighters.iter().copied().filter_map(|item_key| {
+        let uad_fighter = uad.items.get(item_key).get_fighter().unwrap();
+        uad_fighter
+            .get_a_extras()
+            .and_then(|a_extras| a_extras.volume)
+            .map(|volume| {
+                (
+                    item_key,
+                    volume * AttrVal::from(uad_fighter.get_count().unwrap().current),
+                )
+            })
+    })
 }

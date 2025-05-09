@@ -29,11 +29,9 @@ impl Vast {
 // bandwidth, active drone count)
 #[derive(Clone)]
 pub(in crate::sol::svc::vast) struct VastFitData {
-    pub(in crate::sol::svc::vast) rigs_offline_calibration: RMap<ItemKey, ad::AAttrVal>,
     pub(in crate::sol::svc::vast) drones_volume: RMap<ItemKey, ad::AAttrVal>,
     pub(in crate::sol::svc::vast) drones_bandwidth: RMap<ItemKey, ad::AAttrVal>,
     pub(in crate::sol::svc::vast) drones_online_bandwidth: RMap<ItemKey, ad::AAttrVal>,
-    pub(in crate::sol::svc::vast) fighters_volume: RMap<ItemKey, ad::AAttrVal>,
     pub(in crate::sol::svc::vast) fighters_online: RSet<ItemKey>,
     pub(in crate::sol::svc::vast) support_fighters: RSet<ItemKey>,
     pub(in crate::sol::svc::vast) support_fighters_online: RSet<ItemKey>,
@@ -86,11 +84,9 @@ pub(in crate::sol::svc::vast) struct VastFitData {
 impl VastFitData {
     pub(in crate::sol::svc) fn new() -> Self {
         Self {
-            rigs_offline_calibration: RMap::new(),
             drones_volume: RMap::new(),
             drones_bandwidth: RMap::new(),
             drones_online_bandwidth: RMap::new(),
-            fighters_volume: RMap::new(),
             fighters_online: RSet::new(),
             support_fighters: RSet::new(),
             support_fighters_online: RSet::new(),

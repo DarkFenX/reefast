@@ -18,9 +18,6 @@ impl Vast {
 
 impl VastFitData {
     pub(in crate::sol::svc) fn consistency_check(&self, uad: &Uad) -> DebugResult {
-        for &item_key in self.rigs_offline_calibration.keys() {
-            check_item_key(uad, item_key, true)?;
-        }
         for &item_key in self.drones_volume.keys() {
             check_item_key(uad, item_key, true)?;
         }
@@ -30,9 +27,6 @@ impl VastFitData {
         for &item_key in self.drones_online_bandwidth.keys() {
             // Holds not loaded drones as well
             check_item_key(uad, item_key, false)?;
-        }
-        for &item_key in self.fighters_volume.keys() {
-            check_item_key(uad, item_key, true)?;
         }
         for &item_key in self.fighters_online.iter() {
             // Holds not loaded fighters as well

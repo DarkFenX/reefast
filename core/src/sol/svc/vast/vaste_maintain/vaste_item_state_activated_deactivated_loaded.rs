@@ -15,14 +15,6 @@ impl Vast {
         a_state: &ad::AState,
     ) {
         match a_state {
-            ad::AState::Offline => {
-                if let UadItem::Rig(rig) = item {
-                    if let Some(val) = rig.get_a_attrs().unwrap().get(&ac::attrs::UPGRADE_COST) {
-                        let fit_data = self.get_fit_data_mut(&rig.get_fit_key());
-                        fit_data.rigs_offline_calibration.insert(item_key, *val);
-                    }
-                }
-            }
             ad::AState::Online => match item {
                 UadItem::Fighter(fighter) => {
                     let extras = fighter.get_a_extras().unwrap();
@@ -168,12 +160,6 @@ impl Vast {
         a_state: &ad::AState,
     ) {
         match a_state {
-            ad::AState::Offline => {
-                if let UadItem::Rig(rig) = item {
-                    let fit_data = self.get_fit_data_mut(&rig.get_fit_key());
-                    fit_data.rigs_offline_calibration.remove(item_key);
-                }
-            }
             ad::AState::Online => match item {
                 UadItem::Fighter(fighter) => {
                     let extras = fighter.get_a_extras().unwrap();

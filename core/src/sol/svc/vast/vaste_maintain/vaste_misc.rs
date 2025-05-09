@@ -1,12 +1,9 @@
-use crate::{
-    AttrVal,
-    sol::{
-        ItemKey,
-        svc::vast::{ValFighterSquadSizeFighterInfo, ValSrqSkillInfo, Vast},
-        uad::{
-            Uad,
-            item::{UadFighter, UadSkill},
-        },
+use crate::sol::{
+    ItemKey,
+    svc::vast::{ValFighterSquadSizeFighterInfo, ValSrqSkillInfo, Vast},
+    uad::{
+        Uad,
+        item::{UadFighter, UadSkill},
     },
 };
 use std::collections::hash_map::Entry;
@@ -42,13 +39,7 @@ impl Vast {
     }
     pub(in crate::sol::svc) fn fighter_count_changed(&mut self, fighter_key: ItemKey, fighter: &UadFighter) {
         let fit_data = self.get_fit_data_mut(&fighter.get_fit_key());
-        let extras = fighter.get_a_extras().unwrap();
         let count = fighter.get_count().unwrap();
-        if let Some(volume) = extras.volume {
-            fit_data
-                .fighters_volume
-                .insert(fighter_key, volume * AttrVal::from(count.current));
-        }
         match count.current > count.max {
             true => fit_data.fighter_squad_size.insert(
                 fighter_key,
