@@ -1,4 +1,3 @@
-use cache::ValCache;
 pub use options::{ValOption, ValOptions};
 pub use result::ValResult;
 pub(in crate::sol::svc) use vast::Vast;
@@ -13,9 +12,7 @@ pub use vaste_vals_fit::{
     ValShipLimitFail, ValShipLimitItemInfo, ValShipStanceFail, ValSlotCountFail, ValSlotIndexFail, ValSrqFail,
     ValSrqSkillInfo, ValUnusableResFail, ValUnusableSlotFail,
 };
-use vaste_vals_fit::{ValChargeGroupFailCache, ValChargeSizeFailCache, ValChargeVolumeFailCache};
 
-mod cache;
 mod options;
 mod result;
 mod vast;

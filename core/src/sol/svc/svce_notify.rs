@@ -47,7 +47,6 @@ impl Svc {
         item: &UadItem,
         a_state: &ad::AState,
     ) {
-        self.vast.item_state_activated(item_key, item, a_state);
     }
     pub(in crate::sol::svc) fn notify_state_deactivated(
         &mut self,
@@ -55,7 +54,6 @@ impl Svc {
         item: &UadItem,
         a_state: &ad::AState,
     ) {
-        self.vast.item_state_deactivated(item_key, item, a_state);
     }
     pub(in crate::sol::svc) fn notify_item_loaded(&mut self, uad: &Uad, item_key: ItemKey, item: &UadItem) {
         self.calc.item_loaded(uad, item_key, item);

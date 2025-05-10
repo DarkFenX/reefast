@@ -564,28 +564,6 @@ fn validate_verbose_unordered(
     }
     Some(ValSlotCountFail { used, max, users })
 }
-fn validate_verbose_unordered_map<T>(
-    kfs: &RSet<ItemKey>,
-    uad: &Uad,
-    calc: &mut Calc,
-    max_item_key: Option<ItemKey>,
-    max_a_attr_id: &ad::AAttrId,
-    users: &RMap<ItemKey, T>,
-) -> Option<ValSlotCountFail> {
-    let used = users.len() as Count;
-    let max = get_max_slots(uad, calc, max_item_key, max_a_attr_id);
-    if used <= max.unwrap_or(0) {
-        return None;
-    }
-    let users: Vec<_> = users
-        .difference(kfs)
-        .map(|(item_key, _)| uad.items.id_by_key(*item_key))
-        .collect();
-    match users.is_empty() {
-        true => None,
-        false => Some(ValSlotCountFail { used, max, users }),
-    }
-}
 fn validate_verbose_ordered(
     kfs: &RSet<ItemKey>,
     uad: &Uad,

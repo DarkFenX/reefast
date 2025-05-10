@@ -1,15 +1,11 @@
-use std::collections::hash_map::Entry;
-
 use itertools::chain;
-use ordered_float::OrderedFloat as OF;
 
 use crate::{
     ac, ad,
     sol::{
         FitKey, ItemKey, ModRack,
         svc::vast::{
-            ValCache, ValFighterSquadSizeFighterInfo, ValItemKindItemInfo, ValShipKind, ValSrqSkillInfo, Vast,
-            VastFitData,
+            ValFighterSquadSizeFighterInfo, ValItemKindItemInfo, ValShipKind, ValSrqSkillInfo, Vast, VastFitData,
         },
         uad::{
             Uad,
@@ -66,30 +62,7 @@ impl Vast {
             UadItem::Charge(charge) => {
                 let extras = charge.get_a_extras().unwrap();
                 item_kind_add(fit_data, item_key, extras.kind, ad::AItemKind::Charge);
-                // Reset result to uncalculated when adding a charge
-                if let Entry::Occupied(mut entry) = fit_data.mods_charge_group.entry(charge.get_cont_item_key()) {
-                    entry.insert(ValCache::Todo(()));
-                }
-                // Reset result to uncalculated when adding a charge
-                if let Entry::Occupied(mut entry) = fit_data.mods_charge_size.entry(charge.get_cont_item_key()) {
-                    match entry.get() {
-                        ValCache::Pass(allowed_charge_size) => {
-                            entry.insert(ValCache::Todo(*allowed_charge_size));
-                        }
-                        ValCache::Fail(fail_cache) => {
-                            entry.insert(ValCache::Todo(fail_cache.allowed_size));
-                        }
-                        _ => (),
-                    }
-                }
                 // Add entry for charges with volume higher than 0
-                if let Some(volume) = extras.volume {
-                    if volume > OF(0.0) {
-                        fit_data
-                            .mods_charge_volume
-                            .insert(charge.get_cont_item_key(), ValCache::Todo(volume));
-                    }
-                }
                 if extras.sec_zone_limitable {
                     fit_data.sec_zone_unactivable.insert(item_key);
                 }
@@ -162,32 +135,11 @@ impl Vast {
                             .insert(item_key, a_item_grp_id);
                     }
                 }
-                if extras.charge_limit.is_some() {
-                    // If there is a charge, calculate later, otherwise mark as no issue
-                    match module.get_charge_item_key() {
-                        Some(_) => fit_data.mods_charge_group.insert(item_key, ValCache::Todo(())),
-                        None => fit_data.mods_charge_group.insert(item_key, ValCache::Pass(())),
-                    };
-                }
-                if let Some(allowed_charge_size) = module.get_a_attrs().unwrap().get(&ac::attrs::CHARGE_SIZE) {
-                    // If there is a charge, calculate later, otherwise mark as no issue
-                    match module.get_charge_item_key() {
-                        Some(_) => fit_data
-                            .mods_charge_size
-                            .insert(item_key, ValCache::Todo(*allowed_charge_size)),
-                        None => fit_data
-                            .mods_charge_size
-                            .insert(item_key, ValCache::Pass(*allowed_charge_size)),
-                    };
-                }
                 if let Some(max_fitted) = extras.max_type_fitted {
                     fit_data
                         .mods_svcs_max_type_fitted
                         .add_value(module.get_a_item_id(), item_key, max_fitted);
                 }
-                // Data is added to / removed from this map when charges are added/removed; here,
-                // we just reset validation result when a module is being loaded
-                handle_charge_volume_for_module(fit_data, item_key);
                 if let Some(sec_class) = extras.online_max_sec_class {
                     fit_data.sec_zone_unonlineable_class.insert(item_key, sec_class);
                 }
@@ -377,23 +329,6 @@ impl Vast {
             UadItem::Charge(charge) => {
                 let extras = charge.get_a_extras().unwrap();
                 item_kind_remove(fit_data, item_key, extras.kind, ad::AItemKind::Charge);
-                if let Entry::Occupied(mut entry) = fit_data.mods_charge_group.entry(charge.get_cont_item_key()) {
-                    // No charge - check should pass
-                    entry.insert(ValCache::Pass(()));
-                }
-                if let Entry::Occupied(mut entry) = fit_data.mods_charge_size.entry(charge.get_cont_item_key()) {
-                    // No charge - check should pass
-                    match entry.get() {
-                        ValCache::Todo(allowed_charge_size) => {
-                            entry.insert(ValCache::Pass(*allowed_charge_size));
-                        }
-                        ValCache::Fail(fail_cache) => {
-                            entry.insert(ValCache::Pass(fail_cache.allowed_size));
-                        }
-                        _ => (),
-                    }
-                }
-                fit_data.mods_charge_volume.remove(&charge.get_cont_item_key());
                 if extras.sec_zone_limitable {
                     fit_data.sec_zone_unactivable.remove(item_key);
                 }
@@ -453,13 +388,6 @@ impl Vast {
                         .remove_entry(&a_item_grp_id, item_key);
                     fit_data.mods_svcs_rigs_max_group_fitted_limited.remove(item_key);
                 }
-                if extras.charge_limit.is_some() {
-                    fit_data.mods_charge_group.remove(item_key);
-                }
-                fit_data.mods_charge_size.remove(item_key);
-                // Data is added to / removed from this map when charges are added/removed; here,
-                // we just reset validation result when a module is being unloaded
-                handle_charge_volume_for_module(fit_data, *item_key);
                 if extras.max_type_fitted.is_some() {
                     fit_data
                         .mods_svcs_max_type_fitted
@@ -552,20 +480,6 @@ impl Vast {
                 if extras.ship_limit.is_some() {
                     fit_data.ship_limited_items.remove(item_key);
                 }
-            }
-            _ => (),
-        }
-    }
-}
-
-fn handle_charge_volume_for_module(fit_data: &mut VastFitData, module_item_key: ItemKey) {
-    if let Entry::Occupied(mut entry) = fit_data.mods_charge_volume.entry(module_item_key) {
-        match entry.get() {
-            ValCache::Pass(charge_volume) => {
-                entry.insert(ValCache::Todo(*charge_volume));
-            }
-            ValCache::Fail(fail_cache) => {
-                entry.insert(ValCache::Todo(fail_cache.charge_volume));
             }
             _ => (),
         }

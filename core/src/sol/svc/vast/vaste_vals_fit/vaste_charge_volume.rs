@@ -6,8 +6,8 @@ use crate::{
     ac,
     sol::{
         AttrVal, ItemId, ItemKey,
-        svc::vast::{ValCache, VastFitData},
-        uad::Uad,
+        svc::vast::VastFitData,
+        uad::{Uad, fit::UadFit},
     },
     util::RSet,
 };
@@ -26,81 +26,45 @@ pub struct ValChargeVolumeChargeInfo {
     pub max_volume: AttrVal,
 }
 impl ValChargeVolumeChargeInfo {
-    fn from_fail_cache(uad: &Uad, fail_cache: &ValChargeVolumeFailCache) -> Self {
+    fn from_fail_data(uad: &Uad, fail_data: FailData) -> Self {
         Self {
-            parent_item_id: uad.items.id_by_key(fail_cache.parent_item_key),
-            charge_volume: fail_cache.charge_volume,
-            max_volume: fail_cache.max_volume,
+            parent_item_id: uad.items.id_by_key(fail_data.parent_item_key),
+            charge_volume: fail_data.charge_volume,
+            max_volume: fail_data.max_volume,
         }
     }
 }
 
-#[derive(Copy, Clone)]
-pub(in crate::sol::svc::vast) struct ValChargeVolumeFailCache {
-    pub parent_item_key: ItemKey,
-    pub charge_item_key: ItemKey,
-    pub charge_volume: AttrVal,
-    pub max_volume: AttrVal,
+struct FailData {
+    parent_item_key: ItemKey,
+    charge_item_key: ItemKey,
+    charge_volume: AttrVal,
+    max_volume: AttrVal,
 }
 
 impl VastFitData {
     // Fast validations
-    pub(in crate::sol::svc::vast) fn validate_charge_volume_fast(&mut self, kfs: &RSet<ItemKey>, uad: &Uad) -> bool {
-        for (module_item_key, cache) in self.mods_charge_volume.iter_mut() {
-            match cache {
-                ValCache::Todo(charge_volume) => match calculate_item_result(uad, *module_item_key, *charge_volume) {
-                    ValCache::Pass(pass) => cache.pass(pass),
-                    ValCache::Fail(fail_cache) => {
-                        let ret_fail = !kfs.contains(&fail_cache.charge_item_key);
-                        cache.fail(fail_cache);
-                        if ret_fail {
-                            return false;
-                        }
-                    }
-                    _ => (),
-                },
-                ValCache::Pass(_) => (),
-                ValCache::Fail(fail_cache) => {
-                    if !kfs.contains(&fail_cache.charge_item_key) {
-                        return false;
-                    }
-                }
-            }
-        }
-        true
+    pub(in crate::sol::svc::vast) fn validate_charge_volume_fast(
+        &mut self,
+        kfs: &RSet<ItemKey>,
+        uad: &Uad,
+        fit: &UadFit,
+    ) -> bool {
+        iter_fails(kfs, uad, fit).next().is_none()
     }
     // Verbose validations
     pub(in crate::sol::svc::vast) fn validate_charge_volume_verbose(
         &mut self,
         kfs: &RSet<ItemKey>,
         uad: &Uad,
+        fit: &UadFit,
     ) -> Option<ValChargeVolumeFail> {
         let mut charges = HashMap::new();
-        for (module_item_key, cache) in self.mods_charge_volume.iter_mut() {
-            match cache {
-                ValCache::Todo(charge_volume) => match calculate_item_result(uad, *module_item_key, *charge_volume) {
-                    ValCache::Pass(pass) => cache.pass(pass),
-                    ValCache::Fail(fail_cache) => {
-                        if !kfs.contains(&fail_cache.charge_item_key) {
-                            charges.insert(
-                                uad.items.id_by_key(fail_cache.charge_item_key),
-                                ValChargeVolumeChargeInfo::from_fail_cache(uad, &fail_cache),
-                            );
-                        }
-                        cache.fail(fail_cache);
-                    }
-                    _ => (),
-                },
-                ValCache::Pass(_) => (),
-                ValCache::Fail(fail_cache) => {
-                    if !kfs.contains(&fail_cache.charge_item_key) {
-                        charges.insert(
-                            uad.items.id_by_key(fail_cache.charge_item_key),
-                            ValChargeVolumeChargeInfo::from_fail_cache(uad, fail_cache),
-                        );
-                    }
-                }
-            }
+        for fail_data in iter_fails(kfs, uad, fit) {
+            charges.insert(
+                uad.items.id_by_key(fail_data.charge_item_key),
+                ValChargeVolumeChargeInfo::from_fail_data(uad, fail_data),
+            );
         }
         match charges.is_empty() {
             true => None,
@@ -109,26 +73,28 @@ impl VastFitData {
     }
 }
 
-fn calculate_item_result(
-    uad: &Uad,
-    module_item_key: ItemKey,
-    charge_volume: AttrVal,
-) -> ValCache<AttrVal, ValChargeVolumeFailCache> {
-    let module = uad.items.get(module_item_key).get_module().unwrap();
-    let module_capacity = match module.get_a_attrs() {
-        Some(attrs) => match attrs.get(&ac::attrs::CAPACITY) {
-            Some(module_capacity) => *module_capacity,
+fn iter_fails(kfs: &RSet<ItemKey>, uad: &Uad, fit: &UadFit) -> impl Iterator<Item = FailData> {
+    itertools::chain!(
+        fit.mods_high.iter_keys().copied(),
+        fit.mods_mid.iter_keys().copied(),
+        fit.mods_low.iter_keys().copied(),
+    )
+    .filter_map(|module_item_key| {
+        let uad_module = uad.items.get(module_item_key).get_module().unwrap();
+        let charge_item_key = uad_module.get_charge_item_key()?;
+        let charge_volume = uad.items.get(charge_item_key).get_a_extras()?.volume?;
+        let max_volume = match uad_module.get_a_attrs()?.get(&ac::attrs::CAPACITY) {
+            Some(max_volume) => *max_volume,
             None => OF(0.0),
-        },
-        None => return ValCache::Pass(charge_volume),
-    };
-    match charge_volume <= module_capacity {
-        true => ValCache::Pass(charge_volume),
-        false => ValCache::Fail(ValChargeVolumeFailCache {
+        };
+        if charge_volume <= max_volume || kfs.contains(&charge_item_key) {
+            return None;
+        }
+        Some(FailData {
             parent_item_key: module_item_key,
-            charge_item_key: module.get_charge_item_key().unwrap(),
+            charge_item_key,
             charge_volume,
-            max_volume: module_capacity,
-        }),
-    }
+            max_volume,
+        })
+    })
 }

@@ -1,6 +1,5 @@
 use crate::sol::{
     debug::{DebugResult, check_fit_key, check_item_key},
-    svc::vast::ValCache,
     uad::Uad,
 };
 
@@ -92,29 +91,6 @@ impl VastFitData {
         }
         for &item_key in self.srqs_missing.keys() {
             check_item_key(uad, item_key, true)?;
-        }
-        for (&module_item_key, module_data) in self.mods_charge_group.iter() {
-            check_item_key(uad, module_item_key, true)?;
-            if let ValCache::Fail(fail_cache) = module_data {
-                check_item_key(uad, fail_cache.parent_item_key, true)?;
-                check_item_key(uad, fail_cache.charge_item_key, true)?;
-            }
-        }
-        for (&module_item_key, module_data) in self.mods_charge_size.iter() {
-            check_item_key(uad, module_item_key, true)?;
-            if let ValCache::Fail(fail_cache) = module_data {
-                check_item_key(uad, fail_cache.parent_item_key, true)?;
-                check_item_key(uad, fail_cache.charge_item_key, true)?;
-            }
-        }
-        for (&module_item_key, module_data) in self.mods_charge_volume.iter() {
-            // This container can store info about non-loaded modules
-            check_item_key(uad, module_item_key, false)?;
-            if let ValCache::Fail(fail_cache) = module_data {
-                // This container can store info about non-loaded modules
-                check_item_key(uad, fail_cache.parent_item_key, false)?;
-                check_item_key(uad, fail_cache.charge_item_key, true)?;
-            }
         }
         for &item_key in self.not_loaded.iter() {
             check_item_key(uad, item_key, false)?;
