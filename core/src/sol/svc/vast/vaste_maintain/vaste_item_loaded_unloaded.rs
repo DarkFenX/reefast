@@ -188,10 +188,6 @@ impl Vast {
                 // Data is added to / removed from this map when charges are added/removed; here,
                 // we just reset validation result when a module is being loaded
                 handle_charge_volume_for_module(fit_data, item_key);
-                if let Some(ad::AShipKind::CapitalShip) = extras.item_ship_kind {
-                    // Unwrap, since item ship kind is set to capital only when volume is available
-                    fit_data.mods_capital.insert(item_key, extras.volume.unwrap());
-                }
                 if let Some(sec_class) = extras.online_max_sec_class {
                     fit_data.sec_zone_unonlineable_class.insert(item_key, sec_class);
                 }
@@ -464,9 +460,6 @@ impl Vast {
                 // Data is added to / removed from this map when charges are added/removed; here,
                 // we just reset validation result when a module is being unloaded
                 handle_charge_volume_for_module(fit_data, *item_key);
-                if let Some(ad::AShipKind::CapitalShip) = extras.item_ship_kind {
-                    fit_data.mods_capital.remove(item_key);
-                }
                 if extras.max_type_fitted.is_some() {
                     fit_data
                         .mods_svcs_max_type_fitted

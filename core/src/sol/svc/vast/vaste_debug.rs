@@ -116,9 +116,6 @@ impl VastFitData {
                 check_item_key(uad, fail_cache.charge_item_key, true)?;
             }
         }
-        for &item_key in self.mods_capital.keys() {
-            check_item_key(uad, item_key, true)?;
-        }
         for &item_key in self.not_loaded.iter() {
             check_item_key(uad, item_key, false)?;
         }
@@ -158,9 +155,6 @@ impl VastFitData {
             check_item_key(uad, item_key, true)?;
         }
         for &item_key in self.sec_zone_unactivable.iter() {
-            check_item_key(uad, item_key, true)?;
-        }
-        for &item_key in self.mods_active.iter() {
             check_item_key(uad, item_key, true)?;
         }
         for &item_key in self.mods_rigs_svcs_vs_ship_kind.keys() {

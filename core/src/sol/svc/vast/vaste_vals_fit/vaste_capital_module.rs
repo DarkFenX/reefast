@@ -5,7 +5,7 @@ use crate::{
     sol::{
         AttrVal, ItemId, ItemKey,
         svc::vast::VastFitData,
-        uad::{Uad, item::UadShip},
+        uad::{Uad, fit::UadFit, item::UadShip},
     },
     util::RSet,
 };
@@ -22,31 +22,34 @@ impl VastFitData {
     pub(in crate::sol::svc::vast) fn validate_capital_module_fast(
         &self,
         kfs: &RSet<ItemKey>,
+        uad: &Uad,
+        fit: &UadFit,
         ship: Option<&UadShip>,
     ) -> bool {
         if !is_ship_subcap(ship) {
             return true;
         }
-        match kfs.is_empty() {
-            true => self.mods_capital.is_empty(),
-            false => self.mods_capital.difference(kfs).next().is_none(),
-        }
+        iter_capital_modules(kfs, uad, fit).next().is_none()
     }
     // Verbose validations
     pub(in crate::sol::svc::vast) fn validate_capital_module_verbose(
         &self,
         kfs: &RSet<ItemKey>,
         uad: &Uad,
+        fit: &UadFit,
         ship: Option<&UadShip>,
     ) -> Option<ValCapitalModFail> {
         if !is_ship_subcap(ship) {
             return None;
         }
-        let module_volumes: HashMap<_, _> = self
-            .mods_capital
-            .iter()
-            .filter(|(module_key, _)| !kfs.contains(module_key))
-            .map(|(module_key, module_volume)| (uad.items.id_by_key(*module_key), *module_volume))
+        let module_volumes: HashMap<_, _> = iter_capital_modules(kfs, uad, fit)
+            .map(|module_key| {
+                let uad_module = uad.items.get(module_key).get_module().unwrap();
+                (
+                    uad_module.get_item_id(),
+                    uad_module.get_a_extras().unwrap().volume.unwrap(),
+                )
+            })
             .collect();
         match module_volumes.is_empty() {
             true => None,
@@ -68,4 +71,21 @@ fn is_ship_subcap(ship: Option<&UadShip>) -> bool {
         None => return false,
     };
     matches!(extras.ship_kind, Some(ad::AShipKind::Ship))
+}
+
+fn iter_capital_modules(kfs: &RSet<ItemKey>, uad: &Uad, fit: &UadFit) -> impl Iterator<Item = ItemKey> {
+    itertools::chain!(
+        fit.mods_high.iter_keys().copied(),
+        fit.mods_mid.iter_keys().copied(),
+        fit.mods_low.iter_keys().copied(),
+    )
+    .filter(|item_key| {
+        let uad_item = uad.items.get(*item_key);
+        match uad_item.get_a_extras() {
+            Some(a_extras) => {
+                matches!(a_extras.item_ship_kind, Some(ad::AShipKind::CapitalShip)) && !kfs.contains(item_key)
+            }
+            None => false,
+        }
+    })
 }

@@ -52,7 +52,6 @@ pub(in crate::sol::svc::vast) struct VastFitData {
     pub(in crate::sol::svc::vast) mods_charge_group: RMap<ItemKey, ValCache<(), ValChargeGroupFailCache>>,
     pub(in crate::sol::svc::vast) mods_charge_size: RMap<ItemKey, ValCache<AttrVal, ValChargeSizeFailCache>>,
     pub(in crate::sol::svc::vast) mods_charge_volume: RMap<ItemKey, ValCache<AttrVal, ValChargeVolumeFailCache>>,
-    pub(in crate::sol::svc::vast) mods_capital: RMap<ItemKey, AttrVal>,
     pub(in crate::sol::svc::vast) not_loaded: RSet<ItemKey>,
     pub(in crate::sol::svc::vast) mods_state: RMap<ItemKey, ValModuleStateModuleInfo>,
     pub(in crate::sol::svc::vast) item_kind: RMap<ItemKey, ValItemKindItemInfo>,
@@ -67,7 +66,6 @@ pub(in crate::sol::svc::vast) struct VastFitData {
     pub(in crate::sol::svc::vast) sec_zone_active: RSet<ItemKey>,
     pub(in crate::sol::svc::vast) sec_zone_unonlineable_class: RMap<ItemKey, ad::AAttrVal>,
     pub(in crate::sol::svc::vast) sec_zone_unactivable: RSet<ItemKey>,
-    pub(in crate::sol::svc::vast) mods_active: RSet<ItemKey>,
     pub(in crate::sol::svc::vast) mods_rigs_svcs_vs_ship_kind: RMap<ItemKey, ValShipKind>,
 }
 impl VastFitData {
@@ -96,7 +94,6 @@ impl VastFitData {
             mods_charge_group: RMap::new(),
             mods_charge_size: RMap::new(),
             mods_charge_volume: RMap::new(),
-            mods_capital: RMap::new(),
             not_loaded: RSet::new(),
             mods_state: RMap::new(),
             item_kind: RMap::new(),
@@ -111,7 +108,6 @@ impl VastFitData {
             sec_zone_active: RSet::new(),
             sec_zone_unonlineable_class: RMap::new(),
             sec_zone_unactivable: RSet::new(),
-            mods_active: RSet::new(),
             mods_rigs_svcs_vs_ship_kind: RMap::new(),
         }
     }

@@ -203,7 +203,9 @@ impl Vast {
         if options.charge_volume.enabled && !fit_data.validate_charge_volume_fast(&options.charge_volume.kfs, uad) {
             return false;
         }
-        if options.capital_module.enabled && !fit_data.validate_capital_module_fast(&options.capital_module.kfs, ship) {
+        if options.capital_module.enabled
+            && !fit_data.validate_capital_module_fast(&options.capital_module.kfs, uad, fit, ship)
+        {
             return false;
         }
         if options.not_loaded_item.enabled && !fit_data.validate_not_loaded_item_fast(&options.not_loaded_item.kfs) {
@@ -337,7 +339,7 @@ impl Vast {
             return false;
         }
         if options.activation_blocked.enabled
-            && !fit_data.validate_activation_blocked_fast(&options.activation_blocked.kfs, uad, calc)
+            && !fit_data.validate_activation_blocked_fast(&options.activation_blocked.kfs, uad, calc, fit)
         {
             return false;
         }
@@ -514,7 +516,8 @@ impl Vast {
             result.charge_volume = fit_data.validate_charge_volume_verbose(&options.charge_volume.kfs, uad);
         }
         if options.capital_module.enabled {
-            result.capital_module = fit_data.validate_capital_module_verbose(&options.capital_module.kfs, uad, ship);
+            result.capital_module =
+                fit_data.validate_capital_module_verbose(&options.capital_module.kfs, uad, fit, ship);
         }
         if options.not_loaded_item.enabled {
             result.not_loaded_item = fit_data.validate_not_loaded_item_verbose(&options.not_loaded_item.kfs, uad);
@@ -625,7 +628,7 @@ impl Vast {
         }
         if options.activation_blocked.enabled {
             result.activation_blocked =
-                fit_data.validate_activation_blocked_verbose(&options.activation_blocked.kfs, uad, calc);
+                fit_data.validate_activation_blocked_verbose(&options.activation_blocked.kfs, uad, calc, fit);
         }
         if options.item_vs_ship_kind.enabled {
             result.item_vs_ship_kind =

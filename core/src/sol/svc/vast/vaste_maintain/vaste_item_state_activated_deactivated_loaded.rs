@@ -100,7 +100,6 @@ impl Vast {
                     if extras.sec_zone_limitable {
                         fit_data.sec_zone_active.insert(item_key);
                     }
-                    fit_data.mods_active.insert(item_key);
                 }
                 _ => (),
             },
@@ -196,7 +195,6 @@ impl Vast {
                     if extras.sec_zone_limitable {
                         fit_data.sec_zone_active.remove(item_key);
                     }
-                    fit_data.mods_active.remove(item_key);
                 }
                 _ => (),
             },
